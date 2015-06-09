@@ -1,8 +1,19 @@
 package pl.agh.sr.zookeeper;
 
+import org.apache.zookeeper.ZooKeeper;
+import pl.agh.sr.zookeeper.nodemonitor.NodeChangeWatcher;
+
 import java.io.IOException;
 
+/**
+ * Main cmd app.
+ * Usage: java ZooCommander <connection-string of form ip:port[,ip:port]> "
+ *          "<app-executable (.exe)> "
+ *          "<z-node name e.g. /znode_test>"
+ *          "[<app-executable-arg> [,<app-executable-arg>]]"
+ */
 public class ZooCommander {
+
     public static void main(String[] args) {
         if (args.length < 2) {
             printUsage();
@@ -15,9 +26,16 @@ public class ZooCommander {
         Executable executable = parseExecutable(args);
 
         try {
-            ZooKeeperClient zooKeeperClient = new ZooKeeperClient(connectionString, zNode, executable);
+            ConnectionHolder connectionHolder = new ConnectionHolder(connectionString);
+            ZooKeeper zooKeeper = connectionHolder.zooKeeper();
 
-            zooKeeperClient.run();
+            NodeChangeWatcher.builder()
+                    .onNodeCreated(executable::start)
+                    .onNodeDeleted(executable::stop)
+                    .listen(zNode, zooKeeper);
+
+            connectionHolder.keepRunning();
+
         } catch (IOException e) {
             System.out.println("Cannot connect to server! Try again" + e.getMessage());
         } catch (IllegalArgumentException e) {

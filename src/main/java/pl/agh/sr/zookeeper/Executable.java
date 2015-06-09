@@ -17,13 +17,15 @@ public class Executable {
         this.args = args;
     }
 
-    public void start() {
+    public boolean start() {
         LOG.info("Starting executable application...");
         //todo implement
+        return true;
     }
 
-    public void stop() {
+    public boolean stop() {
         LOG.info("Stopping executable application...");
         //todo implement
+        return true;
     }
 }

@@ -8,17 +8,24 @@ import java.util.concurrent.TimeUnit;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
-class ZooKeeperClient implements Runnable {
-    private static final Logger LOG = getLogger(ZooKeeperClient.class);
+/**
+ * Creates and maintain connection with ZooKeeper server.
+ *
+ * @author Lukasz Raduj 2015 raduj.lukasz@gmail.com.
+ */
+class ConnectionHolder implements Runnable {
+    private static final Logger LOG = getLogger(ConnectionHolder.class);
     private static final int SESSION_TIMEOUT = 3000;
+    private final ZooKeeper zooKeeper;
 
-    public ZooKeeperClient(String connectionString, String zNode, Executable executable) throws IOException {
+    public ConnectionHolder(String connectionString) throws IOException {
 
         ConnectionChangeWatcher connectionChangeWatcher = new ConnectionChangeWatcher();
-        ZooKeeper zooKeeper = new ZooKeeper(connectionString, SESSION_TIMEOUT, connectionChangeWatcher);
+        this.zooKeeper = new ZooKeeper(connectionString, SESSION_TIMEOUT, connectionChangeWatcher);
+    }
 
-        NodeMonitor nodeMonitor = new NodeMonitor(zooKeeper);
-        nodeMonitor.listen(zNode, executable);
+    public ZooKeeper zooKeeper() {
+        return zooKeeper;
     }
 
     public void run() {
@@ -29,5 +36,9 @@ class ZooKeeperClient implements Runnable {
         } catch (InterruptedException e) {
             LOG.error("Interruption exception", e);
         }
+    }
+
+    public void keepRunning() {
+        run();
     }
 }
