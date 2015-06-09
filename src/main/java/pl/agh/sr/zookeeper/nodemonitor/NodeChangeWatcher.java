@@ -4,8 +4,10 @@ import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import static org.slf4j.LoggerFactory.getLogger;
@@ -21,9 +23,9 @@ public class NodeChangeWatcher implements Watcher {
     private final Supplier<Boolean> onNodeDeleted;
 
     NodeChangeWatcher(String zNode,
-                             ZooKeeper zooKeeper,
-                             Supplier<Boolean> onNodeCreated,
-                             Supplier<Boolean> onNodeDeleted) {
+                      ZooKeeper zooKeeper,
+                      Supplier<Boolean> onNodeCreated,
+                      Supplier<Boolean> onNodeDeleted) {
         this.zNode = zNode;
         this.zooKeeper = zooKeeper;
         this.onNodeCreated = onNodeCreated;
@@ -52,14 +54,24 @@ public class NodeChangeWatcher implements Watcher {
         leaveWatcher();
     }
 
-    void leaveWatcher() {
+    Optional<Stat> leaveWatcher() {
         try {
-            zooKeeper.exists(this.zNode, this);
+            Stat exists = zooKeeper.exists(this.zNode, this);
             LOG.info("Watcher left on zNode: {}", this.zNode);
+            return Optional.ofNullable(exists);
         } catch (KeeperException e) {
             LOG.error("Server signaled error!", e);
         } catch (InterruptedException e) {
             LOG.error("Interrupted exception!", e);
+        }
+        return Optional.empty();
+    }
+
+    public void beginListening() {
+        Optional<Stat> nodeOptional = leaveWatcher();
+
+        if (nodeOptional.isPresent()) {
+            onNodeCreated.get();
         }
     }
 }

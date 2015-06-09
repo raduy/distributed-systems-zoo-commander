@@ -46,7 +46,7 @@ public class ZooCommander {
     private static Executable parseExecutable(String[] args) {
         String executableName = args[2];
 
-        String[] executableArgs = new String[args.length - 2];
+        String[] executableArgs = new String[args.length - 3];
         System.arraycopy(args, 3, executableArgs, 0, args.length - 3);
 
         return new Executable(executableName, executableArgs);

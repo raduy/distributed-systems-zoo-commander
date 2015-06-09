@@ -25,7 +25,7 @@ public class NodeChangeWatcherBuilder {
 
     public NodeChangeWatcher listen(String zNode, ZooKeeper zooKeeper) {
         NodeChangeWatcher nodeChangeWatcher = new NodeChangeWatcher(zNode, zooKeeper, onNodeCreated, onNodeDeleted);
-        nodeChangeWatcher.leaveWatcher();
+        nodeChangeWatcher.beginListening();
 
         return nodeChangeWatcher;
     }
