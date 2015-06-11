@@ -6,6 +6,8 @@ import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
+import pl.agh.sr.zookeeper.ChildrenTraversor;
+import pl.agh.sr.zookeeper.visitor.ChildVisitor;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -21,15 +23,21 @@ public class NodeChangeWatcher implements Watcher {
     private final ZooKeeper zooKeeper;
     private final Supplier<Boolean> onNodeCreated;
     private final Supplier<Boolean> onNodeDeleted;
+    private final Supplier<ChildVisitor> childVisitorSupplier;
+    private final ChildrenTraversor childrenTraversor = new ChildrenTraversor();
+
 
     NodeChangeWatcher(String zNode,
                       ZooKeeper zooKeeper,
                       Supplier<Boolean> onNodeCreated,
-                      Supplier<Boolean> onNodeDeleted) {
+                      Supplier<Boolean> onNodeDeleted,
+                      Supplier<ChildVisitor> childVisitorSupplier) {
+
         this.zNode = zNode;
         this.zooKeeper = zooKeeper;
         this.onNodeCreated = onNodeCreated;
         this.onNodeDeleted = onNodeDeleted;
+        this.childVisitorSupplier = childVisitorSupplier;
     }
 
     public static NodeChangeWatcherBuilder builder() {
@@ -42,22 +50,30 @@ public class NodeChangeWatcher implements Watcher {
 
         switch (event.getType()) {
             case NodeCreated:
-                LOG.info("{} created! Running executable", this.zNode);
+                LOG.info("{} created! Running executable", zNode);
                 onNodeCreated.get();
                 break;
             case NodeDeleted:
-                LOG.info("{} deleted! Stopping executable", this.zNode);
+                LOG.info("{} deleted! Stopping executable", zNode);
                 onNodeDeleted.get();
+                break;
+            case NodeChildrenChanged:
+                LOG.info("Children changed for zNode: {}", zNode);
+                ChildVisitor visitor = childVisitorSupplier.get();
+                childrenTraversor.walk(zooKeeper, zNode, visitor);
+                visitor.terminal();
                 break;
         }
 
-        leaveWatcher();
+        leaveWatcher(event.getPath());
     }
 
-    Optional<Stat> leaveWatcher() {
+    Optional<Stat> leaveWatcher(String path) {
         try {
-            Stat exists = zooKeeper.exists(this.zNode, this);
-            LOG.info("Watcher left on zNode: {}", this.zNode);
+            Stat exists = zooKeeper.exists(path, this);
+            LOG.info("Watcher left on zNode: {}", path);
+
+            zooKeeper.getChildren(path, this);
             return Optional.ofNullable(exists);
         } catch (KeeperException e) {
             LOG.error("Server signaled error!", e);
@@ -67,8 +83,8 @@ public class NodeChangeWatcher implements Watcher {
         return Optional.empty();
     }
 
-    public void beginListening() {
-        Optional<Stat> nodeOptional = leaveWatcher();
+    public void beginListening(String zNode) {
+        Optional<Stat> nodeOptional = leaveWatcher(zNode);
 
         if (nodeOptional.isPresent()) {
             onNodeCreated.get();

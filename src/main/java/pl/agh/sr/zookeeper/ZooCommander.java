@@ -1,9 +1,12 @@
 package pl.agh.sr.zookeeper;
 
 import org.apache.zookeeper.ZooKeeper;
+import pl.agh.sr.zookeeper.connection.ConnectionHolder;
 import pl.agh.sr.zookeeper.nodemonitor.NodeChangeWatcher;
+import pl.agh.sr.zookeeper.visitor.TreePrintingChildVisitor;
 
 import java.io.IOException;
+import java.util.Scanner;
 
 /**
  * Main cmd app.
@@ -28,11 +31,26 @@ public class ZooCommander {
         try {
             ConnectionHolder connectionHolder = new ConnectionHolder(connectionString);
             ZooKeeper zooKeeper = connectionHolder.zooKeeper();
+            ChildrenTraversor childrenTraversor = new ChildrenTraversor();
 
             NodeChangeWatcher.builder()
                     .onNodeCreated(executable::start)
                     .onNodeDeleted(executable::stop)
+                    .onChildrenChanged(TreePrintingChildVisitor::new)
                     .listen(zNode, zooKeeper);
+
+
+            Scanner scanner = new Scanner(System.in);
+            while(!Thread.interrupted()) {
+                System.out.print("$");
+                String cmd = scanner.nextLine();
+                if (cmd.equals("ls")) {
+                    TreePrintingChildVisitor printingChildVisitor = new TreePrintingChildVisitor();
+                    childrenTraversor.walk(zooKeeper, zNode, printingChildVisitor);
+
+                    System.out.println(printingChildVisitor.threeString());
+                }
+            }
 
             connectionHolder.keepRunning();
 

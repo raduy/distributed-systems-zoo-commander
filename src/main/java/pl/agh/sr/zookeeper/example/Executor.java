@@ -10,7 +10,7 @@ package pl.agh.sr.zookeeper.example;
 
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
-import pl.agh.sr.zookeeper.ConnectionChangeWatcher;
+import pl.agh.sr.zookeeper.connection.ConnectionChangeWatcher;
 
 import java.io.FileOutputStream;
 import java.io.IOException;

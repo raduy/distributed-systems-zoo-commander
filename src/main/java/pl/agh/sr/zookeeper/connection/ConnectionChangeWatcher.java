@@ -1,4 +1,4 @@
-package pl.agh.sr.zookeeper;
+package pl.agh.sr.zookeeper.connection;
 
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;

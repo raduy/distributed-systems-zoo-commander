@@ -1,4 +1,4 @@
-package pl.agh.sr.zookeeper;
+package pl.agh.sr.zookeeper.connection;
 
 import org.apache.zookeeper.ZooKeeper;
 import org.slf4j.Logger;
@@ -13,7 +13,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  *
  * @author Lukasz Raduj 2015 raduj.lukasz@gmail.com.
  */
-class ConnectionHolder implements Runnable {
+public class ConnectionHolder implements Runnable {
     private static final Logger LOG = getLogger(ConnectionHolder.class);
     private static final int SESSION_TIMEOUT = 3000;
     private final ZooKeeper zooKeeper;
