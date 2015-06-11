@@ -30,24 +30,25 @@ public class TreePrintingChildVisitor implements ChildVisitor {
 
     @Override
     public void visit(String child) {
+        String[] children = child.split("/");
         builder.append(currentIntent)
-                .append('/')
-                .append(child)
+                .append("/")
+                .append(children[children.length - 1])
                 .append('\n');
     }
 
     @Override
-    public void beforeParent() {
+    public void beforeChildren() {
         this.currentIntent = currentIntent + intent;
     }
 
     @Override
-    public void afterParent() {
+    public void afterChildren() {
         this.currentIntent = currentIntent.substring(0, currentIntent.length() - intent.length());
     }
 
     @Override
-    public void terminal() {
+    public void terminate() {
         System.out.println(this.threeString());
     }
 }

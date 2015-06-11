@@ -8,6 +8,7 @@ import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import pl.agh.sr.zookeeper.ChildrenTraversor;
 import pl.agh.sr.zookeeper.visitor.ChildVisitor;
+import pl.agh.sr.zookeeper.visitor.LeavingWatchChildVisitor;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -61,7 +62,10 @@ public class NodeChangeWatcher implements Watcher {
                 LOG.info("Children changed for zNode: {}", zNode);
                 ChildVisitor visitor = childVisitorSupplier.get();
                 childrenTraversor.walk(zooKeeper, zNode, visitor);
-                visitor.terminal();
+                visitor.terminate();
+
+                LeavingWatchChildVisitor watchChildVisitor = new LeavingWatchChildVisitor(zooKeeper, this);
+                childrenTraversor.walk(zooKeeper, zNode, watchChildVisitor);
                 break;
         }
 
@@ -71,9 +75,8 @@ public class NodeChangeWatcher implements Watcher {
     Optional<Stat> leaveWatcher(String path) {
         try {
             Stat exists = zooKeeper.exists(path, this);
-            LOG.info("Watcher left on zNode: {}", path);
-
             zooKeeper.getChildren(path, this);
+            LOG.info("Watcher left on zNode: {}", path);
             return Optional.ofNullable(exists);
         } catch (KeeperException e) {
             LOG.error("Server signaled error!", e);

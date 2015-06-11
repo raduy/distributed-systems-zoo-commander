@@ -7,9 +7,9 @@ public interface ChildVisitor {
 
     void visit(String child);
 
-    void beforeParent();
+    void beforeChildren();
 
-    void afterParent();
+    void afterChildren();
 
-    void terminal();
+    void terminate();
 }
