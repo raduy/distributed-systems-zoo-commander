@@ -1,4 +1,4 @@
-package pl.agh.sr.zookeeper;
+package pl.agh.sr.zookeeper.nodemonitor.traverse;
 
 import com.google.common.collect.Ordering;
 import org.apache.zookeeper.KeeperException;

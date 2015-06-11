@@ -1,6 +1,7 @@
 package pl.agh.sr.zookeeper.nodemonitor;
 
 import org.apache.zookeeper.ZooKeeper;
+import pl.agh.sr.zookeeper.Callback;
 import pl.agh.sr.zookeeper.visitor.ChildVisitor;
 
 import java.util.function.Supplier;
@@ -9,19 +10,19 @@ import java.util.function.Supplier;
  * @author Lukasz Raduj 2015 raduj.lukasz@gmail.com.
  */
 public class NodeChangeWatcherBuilder {
-    private Supplier<Boolean> onNodeCreated;
-    private Supplier<Boolean> onNodeDeleted;
+    private Callback onNodeCreated;
+    private Callback onNodeDeleted;
     private Supplier<ChildVisitor> childVisitor;
 
     NodeChangeWatcherBuilder() {
     }
 
-    public NodeChangeWatcherBuilder onNodeCreated(Supplier<Boolean> callback) {
+    public NodeChangeWatcherBuilder onNodeCreated(Callback callback) {
         this.onNodeCreated = callback;
         return this;
     }
 
-    public NodeChangeWatcherBuilder onNodeDeleted(Supplier<Boolean> callback) {
+    public NodeChangeWatcherBuilder onNodeDeleted(Callback callback) {
         this.onNodeDeleted = callback;
         return this;
     }

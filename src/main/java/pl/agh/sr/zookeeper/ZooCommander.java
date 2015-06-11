@@ -3,6 +3,7 @@ package pl.agh.sr.zookeeper;
 import org.apache.zookeeper.ZooKeeper;
 import pl.agh.sr.zookeeper.connection.ConnectionHolder;
 import pl.agh.sr.zookeeper.nodemonitor.NodeChangeWatcher;
+import pl.agh.sr.zookeeper.nodemonitor.traverse.ChildrenTraversor;
 import pl.agh.sr.zookeeper.visitor.TreePrintingChildVisitor;
 
 import java.io.IOException;

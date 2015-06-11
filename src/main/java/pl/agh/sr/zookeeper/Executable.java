@@ -8,6 +8,8 @@ import java.util.Arrays;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
+ * Represents application managed using ZooKeeper.
+ *
  * @author Lukasz Raduj 2015 raduj.lukasz@gmail.com.
  */
 public class Executable {
@@ -21,24 +23,26 @@ public class Executable {
         this.command = builder.toString();
     }
 
-    public boolean start() {
+    /**
+     * Logic to invoke on application start.
+     */
+    public void start() {
         LOG.info("Starting executable application {}", command);
         try {
             this.process = Runtime.getRuntime().exec(command);
-            return true;
         } catch (IOException e) {
             LOG.error("Cannot run executable. Cause: ", e);
         }
-        return false;
     }
 
-    public boolean stop() {
+    /**
+     * Logic to invoke to stop running application.
+     */
+    public void stop() {
         LOG.info("Stopping executable application...");
 
         if (process.isAlive()) {
             this.process.destroy();
-            return true;
         }
-        return false;
     }
 }
