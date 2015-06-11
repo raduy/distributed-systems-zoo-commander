@@ -14,6 +14,7 @@ import pl.agh.sr.zookeeper.visitor.LeavingWatchChildVisitor;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import static java.util.Objects.nonNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -83,7 +84,9 @@ public class NodeChangeWatcher implements Watcher {
     Optional<Stat> leaveWatcher(String path) {
         try {
             Stat exists = zooKeeper.exists(path, this);
-            zooKeeper.getChildren(path, this);
+            if (nonNull(exists)) {
+                zooKeeper.getChildren(path, this);
+            }
             LOG.info("Watcher left on zNode: {}", path);
             return Optional.ofNullable(exists);
         } catch (KeeperException e) {

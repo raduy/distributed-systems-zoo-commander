@@ -12,9 +12,9 @@ import java.util.Scanner;
 /**
  * Main cmd app.
  * Usage: java ZooCommander <connection-string of form ip:port[,ip:port]> "
- *          "<app-executable (.exe)> "
- *          "<z-node name e.g. /znode_test>"
- *          "[<app-executable-arg> [,<app-executable-arg>]]"
+ * "<app-executable (.exe)> "
+ * "<z-node name e.g. /znode_test>"
+ * "[<app-executable-arg> [,<app-executable-arg>]]"
  */
 public class ZooCommander {
 
@@ -42,7 +42,7 @@ public class ZooCommander {
 
 
             Scanner scanner = new Scanner(System.in);
-            while(!Thread.interrupted()) {
+            while (!Thread.interrupted()) {
                 System.out.print("$");
                 String cmd = scanner.nextLine();
                 if (cmd.equals("ls")) {
@@ -52,8 +52,6 @@ public class ZooCommander {
                     System.out.println(printingChildVisitor.threeString());
                 }
             }
-
-            connectionHolder.keepRunning();
 
         } catch (IOException e) {
             System.out.println("Cannot connect to server! Try again" + e.getMessage());

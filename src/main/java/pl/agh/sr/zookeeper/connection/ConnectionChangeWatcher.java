@@ -12,7 +12,7 @@ public class ConnectionChangeWatcher implements Watcher {
     public void process(WatchedEvent event) {
         LOG.info("Connection state changed! Received event! {}", event);
 
-        switch (event.getState()){
+        switch (event.getState()) {
             case SyncConnected:
                 LOG.info("Client connected {}", event.toString());
                 break;
