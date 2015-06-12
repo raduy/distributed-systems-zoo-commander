@@ -19,7 +19,7 @@ import java.util.Scanner;
 public class ZooCommander {
 
     public static void main(String[] args) {
-        if (args.length < 2) {
+        if (args.length < 3) {
             printUsage();
             return;
         }
