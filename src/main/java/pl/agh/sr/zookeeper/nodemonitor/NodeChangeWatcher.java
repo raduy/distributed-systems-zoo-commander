@@ -22,7 +22,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  */
 public class NodeChangeWatcher implements Watcher {
     private static final Logger LOG = getLogger(NodeChangeWatcher.class);
-    private final String zNode;
+    private final String rootNode;
     private final ZooKeeper zooKeeper;
     private final Callback onNodeCreated;
     private final Callback onNodeDeleted;
@@ -36,7 +36,7 @@ public class NodeChangeWatcher implements Watcher {
                       Callback onNodeDeleted,
                       Supplier<ChildVisitor> childVisitorSupplier) {
 
-        this.zNode = zNode;
+        this.rootNode = zNode;
         this.zooKeeper = zooKeeper;
         this.onNodeCreated = onNodeCreated;
         this.onNodeDeleted = onNodeDeleted;
@@ -51,41 +51,34 @@ public class NodeChangeWatcher implements Watcher {
     public void process(WatchedEvent event) {
         LOG.info("Watching node changed: {}", event);
 
+        String path = event.getPath();
         switch (event.getType()) {
             case NodeCreated:
-                LOG.info("{} created! Running executable", zNode);
-                onNodeCreated.invoke();
-                break;
+                if (rootNode.equals(path)) {
+                    LOG.info("{} created! Running executable", rootNode);
+                    onNodeCreated.invoke();
+                    leaveWatcher(rootNode);
+                }
+                return;
             case NodeDeleted:
-                LOG.info("{} deleted! Stopping executable", zNode);
-                onNodeDeleted.invoke();
-                break;
+                if (rootNode.equals(path)) {
+                    LOG.info("{} deleted! Stopping executable", rootNode);
+                    onNodeDeleted.invoke();
+                    leaveWatcher(rootNode);
+                }
+                return;
             case NodeChildrenChanged:
-                LOG.info("Children changed for zNode: {}", zNode);
+                LOG.info("Children changed for zNode: {}", path);
                 runVisitor();
-                leaveWatcherOnChildren();
-                break;
+                leaveWatcherOnChildren(path);
         }
-
-        leaveWatcher(event.getPath());
-    }
-
-    private void leaveWatcherOnChildren() {
-        LeavingWatchChildVisitor watchChildVisitor = new LeavingWatchChildVisitor(zooKeeper, this);
-        childrenTraversor.walk(zooKeeper, zNode, watchChildVisitor);
-    }
-
-    private void runVisitor() {
-        ChildVisitor visitor = childVisitorSupplier.get();
-        childrenTraversor.walk(zooKeeper, zNode, visitor);
-        visitor.terminate();
     }
 
     Optional<Stat> leaveWatcher(String path) {
         try {
             Stat exists = zooKeeper.exists(path, this);
             if (nonNull(exists)) {
-                zooKeeper.getChildren(path, this);
+                leaveWatcherOnChildren(path);
             }
             LOG.info("Watcher left on zNode: {}", path);
             return Optional.ofNullable(exists);
@@ -95,6 +88,18 @@ public class NodeChangeWatcher implements Watcher {
             LOG.error("Interrupted exception!", e);
         }
         return Optional.empty();
+    }
+
+    private void leaveWatcherOnChildren(String zNode) {
+        LOG.info("Leaving child watch for path: {}", zNode);
+        LeavingWatchChildVisitor watchChildVisitor = new LeavingWatchChildVisitor(zooKeeper, this);
+        childrenTraversor.walk(zooKeeper, zNode, watchChildVisitor);
+    }
+
+    private void runVisitor() {
+        ChildVisitor visitor = childVisitorSupplier.get();
+        childrenTraversor.walk(zooKeeper, rootNode, visitor);
+        visitor.terminate();
     }
 
     public void beginListening(String zNode) {

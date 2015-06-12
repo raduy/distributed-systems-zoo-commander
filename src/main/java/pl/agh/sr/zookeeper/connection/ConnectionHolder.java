@@ -9,7 +9,7 @@ import java.io.IOException;
  *
  * @author Lukasz Raduj 2015 raduj.lukasz@gmail.com.
  */
-public class ConnectionHolder {
+public class ConnectionHolder implements AutoCloseable {
     private static final int SESSION_TIMEOUT = 3000;
     private final ZooKeeper zooKeeper;
 
@@ -21,5 +21,10 @@ public class ConnectionHolder {
 
     public ZooKeeper zooKeeper() {
         return zooKeeper;
+    }
+
+    @Override
+    public void close() throws Exception {
+        this.zooKeeper.close();
     }
 }

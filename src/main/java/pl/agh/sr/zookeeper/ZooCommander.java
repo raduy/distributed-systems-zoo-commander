@@ -28,35 +28,44 @@ public class ZooCommander {
         String zNode = args[1];
 
         Executable executable = parseExecutable(args);
+        ChildrenTraversor childrenTraversor = new ChildrenTraversor();
 
-        try {
-            ConnectionHolder connectionHolder = new ConnectionHolder(connectionString);
+        try (ConnectionHolder connectionHolder = new ConnectionHolder(connectionString)) {
+
             ZooKeeper zooKeeper = connectionHolder.zooKeeper();
-            ChildrenTraversor childrenTraversor = new ChildrenTraversor();
-
             NodeChangeWatcher.builder()
                     .onNodeCreated(executable::start)
                     .onNodeDeleted(executable::stop)
                     .onChildrenChanged(TreePrintingChildVisitor::new)
                     .listen(zNode, zooKeeper);
 
-
-            Scanner scanner = new Scanner(System.in);
-            while (!Thread.interrupted()) {
-                System.out.print("$");
-                String cmd = scanner.nextLine();
-                if (cmd.equals("ls")) {
-                    TreePrintingChildVisitor printingChildVisitor = new TreePrintingChildVisitor();
-                    childrenTraversor.walk(zooKeeper, zNode, printingChildVisitor);
-
-                    System.out.println(printingChildVisitor.threeString());
-                }
-            }
-
+            listenForCommands(zNode, childrenTraversor, zooKeeper);
         } catch (IOException e) {
             System.out.println("Cannot connect to server! Try again" + e.getMessage());
         } catch (IllegalArgumentException e) {
             System.out.println("Problem running commander:" + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Error occurred! Cause:" + e.getMessage());
+        }
+    }
+
+    private static void listenForCommands(String zNode, ChildrenTraversor childrenTraversor, ZooKeeper zooKeeper) {
+        Scanner scanner = new Scanner(System.in);
+        while (!Thread.interrupted()) {
+            System.out.print("$");
+            String cmd = scanner.nextLine();
+            if (cmd.isEmpty()) {
+                continue;
+            }
+
+            if (cmd.startsWith("ls")) {
+                TreePrintingChildVisitor printingChildVisitor = new TreePrintingChildVisitor();
+                childrenTraversor.walk(zooKeeper, zNode, printingChildVisitor);
+
+                System.out.println(printingChildVisitor.threeString());
+            } else {
+                System.out.println("Hit 'ls' to print zNode tree");
+            }
         }
     }
 
